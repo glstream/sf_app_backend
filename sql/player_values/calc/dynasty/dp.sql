@@ -9,6 +9,7 @@ select player_full_name
 , one_qb_value
 , one_qb_rank_ecr
 ,insert_date
+, fp_player_id as player_id	
 from dynastr.dp_player_ranks 
 where 1=1
 and player_full_name not like '%2023%'

@@ -14,10 +14,11 @@ SELECT
   sf.superflex_sf_rank::int as sf_rank, -- Casting to int
   sf.superflex_one_qb_value::int as one_qb_value, -- Casting to int
   sf.superflex_one_qb_rank::int as one_qb_rank, -- Casting to int
-  sf.insert_date
+  sf.insert_date,
+  sf.ktc_player_id as player_id
 FROM
   dynastr.sf_player_ranks sf
-LEFT JOIN dynastr.players p ON sf.player_full_name = p.full_name
+INNER JOIN dynastr.players p ON sf.player_full_name = p.full_name
 WHERE
   sf.player_full_name NOT LIKE '%2023%'
   AND (sf.superflex_sf_value > 0 OR sf.superflex_one_qb_value > 0)

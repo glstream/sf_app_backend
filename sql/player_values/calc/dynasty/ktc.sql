@@ -9,6 +9,7 @@ select player_full_name
 , one_qb_value
 , rank as one_qb_rank
 ,insert_date
+, ktc_player_id as player_id
 from dynastr.ktc_player_ranks ktc
 where 1=1
 and ktc.rank_type = 'dynasty'

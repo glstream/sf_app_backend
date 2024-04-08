@@ -7,6 +7,7 @@ select player_full_name
 , one_qb_value
 , one_qb_overall_rank
 ,fc.insert_date
+, fc_player_id as player_id
 from dynastr.fc_player_ranks fc
 left join dynastr.players p on fc.sleeper_player_id = p.player_id
 where 1=1
