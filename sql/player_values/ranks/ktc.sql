@@ -26,14 +26,15 @@ select player_full_name
 ,insert_date
 from dynastr.ktc_player_ranks )
 															   
-select player_full_name
+select
+COALESCE(REPLACE(REPLACE(player_full_name, 'Round ', ''), ' Pick ', '.')) as player_full_name
 , pos_rank
 , team
 , age
 , value as player_value
 , rank as player_rank
 , row_number() OVER (order by value desc) as _rownum
-, _position
+, UPPER(_position) AS _position
 , roster_type
 , rank_type
 , TO_DATE(insert_date, 'YYYY-mm-DDTH:M:SS.z')-1 as _insert_date

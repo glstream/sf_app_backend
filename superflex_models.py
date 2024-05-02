@@ -16,3 +16,15 @@ class RosterDataModel(BaseModel):
     user_id: str
     guid: str
     league_year: str
+
+
+class RanksDataModel(BaseModel):
+    user_id: str
+    display_name: str
+    league_id: str
+    rank_source: str
+    power_rank: int
+    starters_rank: int
+    bench_rank: int
+    picks_rank: int
+

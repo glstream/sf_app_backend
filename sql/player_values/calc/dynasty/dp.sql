@@ -1,4 +1,4 @@
-select player_full_name
+select COALESCE(REPLACE(REPLACE(player_full_name, 'Round ', ''), ' Pick ', '.')) as player_full_name
 ,  case when team = 'KCC' then 'KC' else team end as team
 , age
 , CASE WHEN substring(lower(player_full_name) from 6 for 5) = 'round' THEN 'Pick' 

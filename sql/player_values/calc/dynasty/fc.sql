@@ -1,4 +1,4 @@
-select player_full_name
+select COALESCE(REPLACE(REPLACE(player_full_name, 'Round ', ''), ' Pick ', ' ')) as player_full_name
 , p.team					
 , p.age
 , fc.player_position as _position

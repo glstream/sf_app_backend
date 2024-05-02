@@ -14,6 +14,7 @@ from dynastr.ktc_player_ranks ktc
 where 1=1
 and ktc.rank_type = 'redraft'
 and player_full_name not like '%2023%'
-and (sf_value > 0 OR one_qb_value > 0)		
-and rank_type = 'dynasty'			 
+and (sf_value > 0 AND one_qb_value > 0)		
+and rank_type = 'redraft'	
+and lower(position) not in ('k','dst')		 
 order by sf_value desc

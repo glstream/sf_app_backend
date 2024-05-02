@@ -6,26 +6,34 @@ SELECT
                     , NTILE(10) OVER (order by total_value desc) total_tile
                     , max(qb_value) as qb_value
                     , RANK() OVER (order by sum(qb_value) desc) qb_rank
+                    , RANK() OVER (order by sum(qb_starter_value) desc) qb_starter_rank
                     , NTILE(10) OVER (order by sum(qb_value) desc) qb_tile
                     , sum(qb_value) as qb_sum
+                    , sum(qb_starter_value) as qb_starter_sum
 					, coalesce(round(sum(qb_value::integer) / NULLIF(sum(qb_count), 0),0), 0) as qb_average
 					, sum(qb_count) as qb_count
                     , max(rb_value) as rb_value
                     , RANK() OVER (order by sum(rb_value::integer) desc) rb_rank
+                    , RANK() OVER (order by sum(rb_starter_value) desc) rb_starter_rank
                     , NTILE(10) OVER (order by sum(rb_value::integer) desc) rb_tile
                     , sum(rb_value) as rb_sum
+                    , sum(rb_starter_value) as rb_starter_sum
 					, coalesce(round(sum(rb_value::integer) / NULLIF(sum(rb_count), 0),0), 0) as rb_average
 					, sum(rb_count) as rb_count
                     , max(wr_value) as wr_value
                     , RANK() OVER (order by sum(wr_value) desc) wr_rank
+                    , RANK() OVER (order by sum(wr_starter_value) desc) wr_starter_rank
                     , NTILE(10) OVER (order by sum(wr_value) desc) wr_tile
                     , sum(wr_value) as wr_sum
+                    , sum(wr_starter_value) as wr_starter_sum
 					, coalesce(round(sum(wr_value::integer) / NULLIF(sum(wr_count), 0),0), 0) as wr_average
 					, sum(wr_count) as wr_count
                     , max(te_value) as te_value
                     , RANK() OVER (order by sum(te_value) desc) te_rank
+                    , RANK() OVER (order by sum(te_starter_value) desc) te_starter_rank
                     , NTILE(10) OVER (order by sum(te_value) desc) te_tile
                     , sum(te_value) as te_sum
+                    , sum(te_starter_value) as te_starter_sum
 					, coalesce(round(sum(te_value::integer) / NULLIF(sum(te_count), 0),0), 0) as te_average
 					, sum(te_count) as wr_count
                     , max(flex_value) as flex_value
@@ -55,12 +63,16 @@ SELECT
                     , DENSE_RANK() OVER (order by total_value desc) total_rank
                     , fantasy_position
                     , case when player_position = 'QB' THEN sum(player_value) else 0 end as qb_value
+                    , case when player_position = 'QB' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as qb_starter_value
                     , case when player_position = 'QB' THEN count(full_name) else 0 end as qb_count
                     , case when player_position = 'RB' THEN sum(player_value) else 0 end as rb_value
+                    , case when player_position = 'RB' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as rb_starter_value
                     , case when player_position = 'RB' THEN count(full_name) else 0 end as rb_count
                     , case when player_position = 'WR' THEN sum(player_value) else 0 end as wr_value
+                    , case when player_position = 'WR' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as wr_starter_value
                     , case when player_position = 'WR' THEN count(full_name) else 0 end as wr_count
                     , case when player_position = 'TE' THEN sum(player_value) else 0 end as te_value
+                    , case when player_position = 'TE' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as te_starter_value
                     , case when player_position = 'TE' THEN count(full_name) else 0 end as te_count
                     , case when fantasy_position = 'FLEX' THEN sum(player_value) else 0 end as flex_value
                     , case when fantasy_position = 'SUPER_FLEX' THEN sum(player_value) else 0 end as super_flex_value

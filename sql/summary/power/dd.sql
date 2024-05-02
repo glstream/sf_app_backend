@@ -6,6 +6,7 @@ SELECT
                     , ROW_NUMBER() OVER (order by sum(position_value) desc) total_rank 
                     , NTILE(10) OVER (order by total_value desc) total_tile
                     , max(qb_value) as qb_value
+                    , max(qb_starter_value) as qb_starter_value
                     , RANK() OVER (order by sum(qb_value) desc) qb_rank
                     , RANK() OVER (order by sum(qb_starter_value) desc) qb_starter_rank
                     , NTILE(10) OVER (order by sum(qb_value) desc) qb_tile
@@ -35,10 +36,10 @@ SELECT
                     , NTILE(10) OVER (order by sum(wr_value) desc) wr_tile
                     , sum(wr_value) as wr_sum
                     , sum(wr_starter_value) as wr_starter_sum
-                    , coalesce(round(sum(rb_value) / NULLIF(sum(rb_count), 0),0), 0) as rb_average_value
-                    , coalesce(round(sum(rb_starter_value) / NULLIF(sum(rb_starter_count), 0),0), 0) as rb_starter_average_value
-                    , coalesce(round(sum(rb_age) / NULLIF(sum(rb_count), 0),0),0) as rb_average_age
-                    , coalesce(round(sum(rb_starter_age) / NULLIF(sum(rb_starter_count), 0),0),0) as rb_starter_average_age
+                   , coalesce(round(sum(wr_value) / NULLIF(sum(wr_count), 0),0), 0) as wr_average_value
+                    , coalesce(round(sum(te_starter_value) / NULLIF(sum(wr_starter_count), 0),0), 0) as wr_starter_average_value
+                    , coalesce(round(sum(wr_age) / NULLIF(sum(wr_count), 0),0),0) as wr_average_age
+                    , coalesce(round(sum(wr_starter_age) / NULLIF(sum(wr_starter_count), 0),0),0) as wr_starter_average_age
 					, sum(wr_count) as wr_count
                     , max(te_value) as te_value
                     , max(te_starter_value) as te_starter_value
@@ -47,7 +48,7 @@ SELECT
                     , NTILE(10) OVER (order by sum(te_value) desc) te_tile
                     , sum(te_value) as te_sum
                     , sum(te_starter_value) as te_starter_sum
-                    , coalesce(round(sum(te_value) / NULLIF(sum(te_count), 0),0), 0) as te_average_value
+					                    , coalesce(round(sum(te_value) / NULLIF(sum(te_count), 0),0), 0) as te_average_value
                     , coalesce(round(sum(te_starter_value) / NULLIF(sum(te_starter_count), 0),0), 0) as te_starter_average_value
                     , coalesce(round(sum(te_age) / NULLIF(sum(te_count), 0),0),0) as te_average_age
                     , coalesce(round(sum(te_starter_age) / NULLIF(sum(te_starter_count), 0),0),0) as te_starter_average_age
@@ -122,8 +123,8 @@ SELECT
                         , asset.player_position
                         , asset.fantasy_position
                         , asset.fantasy_designation
-                        , asset.age
                         , asset.team
+                        , asset.age
                         , asset.player_value  
                         , sum(asset.player_value) OVER (PARTITION BY asset.user_id) as total_value    
                         from      
@@ -133,11 +134,12 @@ SELECT
                     , lp.league_id
                     , lp.session_id
                     , pl.player_id
-                    , ktc.fc_player_id
-					, ktc.player_full_name
+                    , dd.name_id as fp_player_id
+					, pl.full_name as player_full_name
+                    , pl.age
                     , pl.player_position
-                    , coalesce(ktc.league_type, -1) as player_value
-                    , RANK() OVER (PARTITION BY lp.user_id, pl.player_position ORDER BY coalesce(ktc.league_type, -1) desc) as player_order
+                    , coalesce(dd.league_type, -1) as player_value
+                    , RANK() OVER (PARTITION BY lp.user_id, pl.player_position ORDER BY coalesce(dd.league_type, -1) desc) as player_order
                     , qb_cnt
                     , rb_cnt
                     , wr_cnt
@@ -148,18 +150,19 @@ SELECT
 
                     FROM dynastr.league_players lp
                     INNER JOIN dynastr.players pl on lp.player_id = pl.player_id
-                    LEFT JOIN dynastr.fc_player_ranks ktc on concat(pl.first_name, pl.last_name)  = concat(ktc.player_first_name, ktc.player_last_name)
+                    LEFT JOIN dynastr.dd_player_ranks dd on lower(concat(pl.first_name, pl.last_name, pl.player_position)) = dd.name_id 
                     INNER JOIN dynastr.current_leagues cl on lp.league_id = cl.league_id and cl.session_id = 'session_id'
                     WHERE lp.session_id = 'session_id'
                     and lp.league_id = 'league_id'
-                    and ktc.rank_type = 'dynasty'
-                    and pl.player_position IN ('QB', 'RB', 'WR', 'TE' ))
+                    and pl.player_position IN ('QB', 'RB', 'WR', 'TE' )
+                    and dd.rank_type = 'rank_type'
+                    )
 
      						   
                     , starters as (SELECT  
                     qb.user_id
                     , qb.player_id
-                    , qb.fc_player_id
+                    , qb.fp_player_id
 					, qb.player_full_name
                     , qb.player_position
                     , qb.player_position as fantasy_position
@@ -172,7 +175,7 @@ SELECT
                     SELECT 
                     rb.user_id
                     , rb.player_id
-                    , rb.fc_player_id
+                    , rb.fp_player_id
 					, rb.player_full_name
                     , rb.player_position
                     , rb.player_position as fantasy_position
@@ -185,7 +188,7 @@ SELECT
                     select 
                     wr.user_id
                     , wr.player_id
-                    , wr.fc_player_id
+                    , wr.fp_player_id
 					, wr.player_full_name
                     , wr.player_position
                     , wr.player_position as fantasy_position
@@ -198,7 +201,7 @@ SELECT
                     select 
                     te.user_id
                     , te.player_id
-                    , te.fc_player_id
+                    , te.fp_player_id
 					, te.player_full_name
                     , te.player_position
                     , te.player_position as fantasy_position
@@ -213,7 +216,7 @@ SELECT
                     SELECT
                     ns.user_id
                     , ns.player_id
-                    , ns.fc_player_id
+                    , ns.fp_player_id
 					, ns.player_full_name
                     , ns.player_position
                     , 'FLEX' as fantasy_position
@@ -221,16 +224,16 @@ SELECT
                     from (
                     SELECT
                     fp.user_id
-                    , fp.fc_player_id
+                    , fp.fp_player_id
 					, fp.player_full_name
                     , fp.player_id
                     , fp.player_position
                     , RANK() OVER (PARTITION BY fp.user_id ORDER BY fp.player_value desc) as player_order
                     , fp.flex_cnt
                     from base_players fp
-                    left join starters s on s.fc_player_id = fp.fc_player_id
+                    left join starters s on s.fp_player_id = fp.fp_player_id
                     where 1=1
-                    and s.fc_player_id IS NULL
+                    and s.fp_player_id IS NULL
                     and fp.player_position IN ('RB','WR','TE')  
                     order by player_order) ns
                     where player_order <= ns.flex_cnt)
@@ -239,7 +242,7 @@ SELECT
                     SELECT
                     ns_sf.user_id
                     , ns_sf.player_id
-                    , ns_sf.fc_player_id
+                    , ns_sf.fp_player_id
 					, ns_sf.player_full_name
                     , ns_sf.player_position
                     , 'SUPER_FLEX' as fantasy_position
@@ -247,15 +250,15 @@ SELECT
                     from (
                     SELECT
                     fp.user_id
-                    , fp.fc_player_id
+                    , fp.fp_player_id
 					, fp.player_full_name
                     , fp.player_id
                     , fp.player_position
                     , RANK() OVER (PARTITION BY fp.user_id ORDER BY fp.player_value desc) as player_order
                     , fp.sf_cnt
                     from base_players fp
-                    left join (select * from starters UNION ALL select * from flex) s on s.fc_player_id = fp.fc_player_id
-                    where s.fc_player_id IS NULL
+                    left join (select * from starters UNION ALL select * from flex) s on s.fp_player_id = fp.fp_player_id
+                    where s.fp_player_id IS NULL
                     and fp.player_position IN ('QB','RB','WR','TE')  
                     order by player_order) ns_sf
                     where player_order <= ns_sf.sf_cnt)
@@ -264,7 +267,7 @@ SELECT
                     SELECT
                     ns_rf.user_id
                     , ns_rf.player_id
-                    , ns_rf.fc_player_id
+                    , ns_rf.fp_player_id
                     , ns_rf.player_full_name
                     , ns_rf.player_position
                     , 'REC_FLEX' as fantasy_position
@@ -272,15 +275,15 @@ SELECT
                     from (
                     SELECT
                     fp.user_id
-                    , fp.fc_player_id
+                    , fp.fp_player_id
                     , fp.player_full_name
                     , fp.player_id
                     , fp.player_position
                     , ROW_NUMBER() OVER (PARTITION BY fp.user_id ORDER BY fp.player_value desc) as player_order
                     , fp.rf_cnt
                     from base_players fp
-                    left join (select * from starters UNION ALL select * from flex) s on s.fc_player_id = fp.fc_player_id
-                    where s.fc_player_id IS NULL
+                    left join (select * from starters UNION ALL select * from flex) s on s.fp_player_id = fp.fp_player_id
+                    where s.fp_player_id IS NULL
                     and fp.player_position IN ('WR','TE')  
                     order by player_order) ns_rf
                     where player_order <= ns_rf.rf_cnt)
@@ -288,7 +291,7 @@ SELECT
                     , all_starters as (select 
                     user_id
                     ,ap.player_id
-                    ,ap.fc_player_id
+                    ,ap.fp_player_id
 					,ap.player_full_name
                     ,ap.player_position 
                     ,ap.fantasy_position
@@ -309,13 +312,12 @@ SELECT
                     ,tp.player_position
                     ,tp.fantasy_position
                     ,tp.fantasy_designation
-                    ,coalesce(fc.league_type, -1) as player_value
+                    ,coalesce(dd.league_type, -1) as player_value
                     from (select 
                             user_id
                             ,ap.player_id
-                            ,ap.fc_player_id
+                            ,ap.fp_player_id
                             ,ap.player_full_name
-                            , NULL as pick_year
                             ,ap.player_position 
                             ,ap.fantasy_position
                             ,'STARTER' as fantasy_designation
@@ -325,9 +327,8 @@ SELECT
                             select 
                             bp.user_id
                             ,bp.player_id
-                            ,bp.fc_player_id
+                            ,bp.fp_player_id
                             ,bp.player_full_name
-                            , NULL as pick_year
                             ,bp.player_position 
                             ,bp.player_position as fantasy_position
                             ,'BENCH' as fantasy_designation
@@ -337,9 +338,8 @@ SELECT
                             select 
                             user_id
                             ,null as player_id
-                            ,picks.fc_player_id
+                            ,picks.fp_player_id
                             ,picks.player_full_name as player_full_name
-                            ,picks.year as pick_year
                             ,'PICKS' as player_position 
                             ,'PICKS' as fantasy_position
                             ,'PICKS' as fantasy_designation
@@ -347,16 +347,19 @@ SELECT
                             from (SELECT t1.user_id
                                 , t1.season
                                 , t1.year
-                                , fc.fc_player_id
+                                , dd.name_id as fp_player_id
 								, t1.player_full_name
-								, coalesce(fc.league_type, -1)
+								, coalesce(dd.league_type, -1)
                                 FROM (
                                     SELECT  
                                     al.user_id
                                     , al.season
                                     , al.year 
-                                    , CASE WHEN al.draft_set_flg = 'Y' and al.year = dname.season THEN al.year || ' Round ' || al.round || ' Pick ' || dname.position
-									ELSE al.year || ' Round ' || al.round END AS player_full_name  
+									 , CASE WHEN (dname.position::integer / al.leaguesize  < 0.33) and (al.draft_set_flg = 'Y') and (al.year = dname.season) THEN al.year || 'early' || al.round_name || 'pi'
+                                            WHEN (dname.position::integer / al.leaguesize) >= 0.33 AND (dname.position::integer / al.leaguesize) <= 0.66 and al.draft_set_flg = 'Y' and al.year = dname.season  THEN al.year || 'mid' || al.round_name  || 'pi'
+        								    WHEN (dname.position::integer / al.leaguesize) > 0.66 and al.draft_set_flg = 'Y' and al.year = dname.season THEN al.year || 'mid' || al.round_name  || 'pi'
+        									ELSE al.year || 'mid' || al.round_name  || 'pi'
+                                            END AS player_full_name  
                                     FROM (                           
                                         SELECT dp.roster_id
                                         , dp.year
@@ -365,7 +368,8 @@ SELECT
                                         , dp.league_id
                                         , dpos.user_id
                                         , dpos.season
-                                        , dpos.draft_set_flg 
+                                        , dpos.draft_set_flg
+										, MAX(dpos.roster_id::integer) OVER () as leaguesize
                                         FROM dynastr.draft_picks dp
                                         INNER JOIN dynastr.draft_positions dpos on dp.owner_id = dpos.roster_id and dp.league_id = dpos.league_id
 
@@ -374,15 +378,18 @@ SELECT
                                         ) al 
                                     INNER JOIN dynastr.draft_positions dname on  dname.roster_id = al.roster_id and al.league_id = dname.league_id
                                 ) t1
-                                LEFT JOIN dynastr.fc_player_ranks fc on t1.player_full_name = fc.player_full_name
+                                LEFT JOIN dynastr.dd_player_ranks dd on t1.player_full_name = dd.name_id
+                                where 1=1
+                                and dd.rank_type = 'rank_type'
 								) picks
                             ) tp
                     left join dynastr.players p on tp.player_id = p.player_id
-                    LEFT JOIN dynastr.fc_player_ranks fc on tp.player_full_name = fc.player_full_name
+                    LEFT JOIN dynastr.dd_player_ranks dd on tp.fp_player_id = dd.name_id
                     inner join dynastr.managers m on tp.user_id = m.user_id 
                     where 1=1
-                    and fc.rank_type = 'dynasty'
-                    order by pick_year, m.display_name, m.avatar, player_value desc, tp.player_full_name	asc
+                    and dd.rank_type = 'rank_type'
+                    order by m.display_name, m.avatar, player_value desc
+									   
                     ) asset  
                             ) t2
                             GROUP BY

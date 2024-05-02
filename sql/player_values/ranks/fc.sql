@@ -27,13 +27,15 @@ where 1=1
 and one_qb_value is not null 					
 )
 															   
-select player_full_name
+select
+COALESCE(REPLACE(REPLACE(player_full_name, 'Round ', ''), ' Pick ', ' ')) as player_full_name
+,player_full_name
 , pos_rank
 , team
 , age
 , value as player_value
 , row_number() OVER (partition by rank_type order by value desc) as player_rank
-, _position
+, UPPER(_position) AS _position
 , roster_type
 , rank_type
 , TO_DATE(insert_date, 'YYYY-mm-DDTH:M:SS.z')-1 as _insert_date

@@ -1,13 +1,10 @@
 SELECT
   sf.player_full_name,
   p.team,
+ p.age,
   CASE
-    WHEN round(CAST(p.age AS float)) < 1 THEN NULL
-    ELSE round(CAST(p.age AS float))::int -- Ensuring age is an integer
-  END as age,
-  CASE
-    WHEN substring(lower(sf.player_full_name) from 6 for 5) = 'round' THEN 'PICK'
-    WHEN _position = 'RDP' THEN 'PICK'
+    WHEN substring(lower(sf.player_full_name) from 6 for 5) = 'round' THEN 'Pick'
+    WHEN _position = 'RDP' THEN 'Pick'
     ELSE _position
   END as _position,
   sf.superflex_sf_value::int as sf_value, -- Casting to int
@@ -24,5 +21,6 @@ WHERE
   sf.player_full_name NOT LIKE '%2023%'
   AND (sf.superflex_sf_value > 0 OR sf.superflex_one_qb_value > 0)
   and rank_type = 'redraft'
+  and _position not in ('K', 'DEF', 'Pick')
 ORDER BY
-  sf.superflex_sf_value DESC;
+  sf.superflex_sf_value DESC
