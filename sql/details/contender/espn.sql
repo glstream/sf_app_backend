@@ -158,6 +158,7 @@ select tp.user_id
 ,m.display_name
 ,p.full_name
 ,p.team
+,p.age
 ,tp.espn_player_id
 ,tp.player_id as sleeper_id
 ,tp.player_position

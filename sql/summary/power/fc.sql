@@ -51,7 +51,7 @@ SELECT
                     , coalesce(round(sum(te_starter_value) / NULLIF(sum(te_starter_count), 0),0), 0) as te_starter_average_value
                     , coalesce(round(sum(te_age) / NULLIF(sum(te_count), 0),0),0) as te_average_age
                     , coalesce(round(sum(te_starter_age) / NULLIF(sum(te_starter_count), 0),0),0) as te_starter_average_age
-					, sum(te_count) as wr_count
+					, sum(te_count) as te_count
                     , max(picks_value) as picks_value
                     , RANK() OVER (order by sum(picks_value) desc) picks_rank
                     , NTILE(10) OVER (order by sum(picks_value) desc) picks_tile

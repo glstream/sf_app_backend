@@ -160,6 +160,7 @@ select tp.user_id
 ,lower(p.first_name) as first_name
 ,lower(p.last_name) as last_name
 ,p.team
+,p.age
 ,tp.player_full_name
 ,tp.player_id as sleeper_id
 ,tp.player_position

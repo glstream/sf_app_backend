@@ -55,7 +55,7 @@ async def roster(roster_data: RosterDataModel, db=Depends(get_db)):
 
 @app.post("/ranks_summary")
 async def ranks_summary(ranks_data: RanksDataModel, db=Depends(get_db)):
-    print('attempt rosters')
+    print('attempt ranks summary')
     return await insert_ranks_summary(db, ranks_data)
 
 
@@ -182,15 +182,15 @@ async def league_summary(league_id: str, platform: str, rank_type: str, guid: st
 @app.get("/league_detail")
 async def league_detail(league_id: str, platform: str, rank_type: str, guid: str, roster_type: str, db=Depends(get_db)):
     session_id = guid
-    league_type = 'sf_value' if roster_type == 'Superflex' else 'one_qb_value'
+    league_type = 'sf_value' if roster_type.lower() == 'superflex' else 'one_qb_value'
     rank_type = 'dynasty' if rank_type.lower() == 'dynasty' else 'redraft'
 
     if platform == 'sf':
-        league_pos_col = "superflex_sf_pos_rank" if roster_type == "sf_value" else "superflex_one_qb_pos_rank"
-        league_type = "superflex_sf_value" if roster_type == "sf_value" else "superflex_one_qb_value"
+        league_pos_col = "superflex_sf_pos_rank" if roster_type.lower() == "superflex" else "superflex_one_qb_pos_rank"
+        league_type = "superflex_sf_value" if roster_type.lower() == "superflex" else "superflex_one_qb_value"
     elif platform == 'dd':
-        league_pos_col = "sf_position_rank" if roster_type == "sf_value" else "position_rank"
-        league_type = "sf_trade_value" if roster_type == "sf_value" else "trade_value"
+        league_pos_col = "sf_position_rank" if roster_type.lower() == "superflex" else "position_rank"
+        league_type = "sf_trade_value" if roster_type.lower() == "superflex" else "trade_value"
     elif platform == 'fc':
         league_pos_col = "sf_position_rank" if league_type == "sf_value" else "one_qb_position_rank"
     else:
@@ -388,3 +388,7 @@ async def navigator_ranks_api(rank_type: str,  db=Depends(get_db)):
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_db()

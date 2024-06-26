@@ -10,7 +10,11 @@ SELECT
                     , NTILE(10) OVER (order by sum(qb_value) desc) qb_tile
                     , sum(qb_value) as qb_sum
                     , sum(qb_starter_value) as qb_starter_sum
-					, coalesce(round(sum(qb_value::integer) / NULLIF(sum(qb_count), 0),0), 0) as qb_average
+                    , coalesce(sum(qb_value) / NULLIF(sum(qb_count), 0), 0) as qb_average_value
+                    , coalesce(sum(qb_starter_value) / NULLIF(sum(qb_starter_count), 0), 0) as qb_starter_average_value
+                    , coalesce(round(sum(qb_age) / NULLIF(sum(qb_count), 0),0),0) as qb_average_age
+                    , coalesce(round(sum(qb_starter_age) / NULLIF(sum(qb_starter_count), 0),0),0) as qb_starter_average_age
+					, coalesce(sum(qb_value::integer) / NULLIF(sum(qb_count), 0), 0) as qb_average
 					, sum(qb_count) as qb_count
                     , max(rb_value) as rb_value
                     , RANK() OVER (order by sum(rb_value::integer) desc) rb_rank
@@ -18,7 +22,11 @@ SELECT
                     , NTILE(10) OVER (order by sum(rb_value::integer) desc) rb_tile
                     , sum(rb_value) as rb_sum
                     , sum(rb_starter_value) as rb_starter_sum
-					, coalesce(round(sum(rb_value::integer) / NULLIF(sum(rb_count), 0),0), 0) as rb_average
+                    , coalesce(sum(rb_value) / NULLIF(sum(rb_count), 0), 0) as rb_average_value
+                    , coalesce(sum(rb_starter_value) / NULLIF(sum(rb_starter_count), 0), 0) as rb_starter_average_value
+                    , coalesce(round(sum(rb_age) / NULLIF(sum(rb_count), 0),0),0) as rb_average_age
+                    , coalesce(round(sum(rb_starter_age) / NULLIF(sum(rb_starter_count), 0),0),0) as rb_starter_average_age
+					, coalesce(sum(rb_value::integer) / NULLIF(sum(rb_count), 0), 0) as rb_average
 					, sum(rb_count) as rb_count
                     , max(wr_value) as wr_value
                     , RANK() OVER (order by sum(wr_value) desc) wr_rank
@@ -26,7 +34,12 @@ SELECT
                     , NTILE(10) OVER (order by sum(wr_value) desc) wr_tile
                     , sum(wr_value) as wr_sum
                     , sum(wr_starter_value) as wr_starter_sum
-					, coalesce(round(sum(wr_value::integer) / NULLIF(sum(wr_count), 0),0), 0) as wr_average
+                    , coalesce(sum(wr_value) / NULLIF(sum(wr_count), 0), 0) as rb_average_value
+                    , coalesce(sum(wr_starter_value) / NULLIF(sum(wr_starter_count), 0), 0) as wr_starter_average_value
+                    , coalesce(round(sum(wr_age) / NULLIF(sum(wr_count), 0),0),0) as wr_average_age
+                    , coalesce(round(sum(wr_starter_age) / NULLIF(sum(wr_starter_count), 0),0),0) as wr_starter_average_age
+					, coalesce(sum(wr_value) / NULLIF(sum(wr_count), 0) ,0) as wr_average
+					, coalesce(sum(wr_value::integer) / NULLIF(sum(wr_count), 0), 0) as wr_average
 					, sum(wr_count) as wr_count
                     , max(te_value) as te_value
                     , RANK() OVER (order by sum(te_value) desc) te_rank
@@ -34,8 +47,12 @@ SELECT
                     , NTILE(10) OVER (order by sum(te_value) desc) te_tile
                     , sum(te_value) as te_sum
                     , sum(te_starter_value) as te_starter_sum
-					, coalesce(round(sum(te_value::integer) / NULLIF(sum(te_count), 0),0), 0) as te_average
-					, sum(te_count) as wr_count
+                    , coalesce(sum(te_value) / NULLIF(sum(te_count), 0), 0) as te_average_value
+                    , coalesce(sum(te_starter_value) / NULLIF(sum(te_starter_count), 0), 0) as te_starter_average_value
+                    , coalesce(round(sum(te_age) / NULLIF(sum(te_count), 0),0),0) as te_average_age
+                    , coalesce(round(sum(te_starter_age) / NULLIF(sum(te_starter_count), 0),0),0) as te_starter_average_age
+					, coalesce(sum(te_value::integer) / NULLIF(sum(te_count), 0), 0) as te_average
+					, sum(te_count) as te_count
                     , max(flex_value) as flex_value
                     , RANK() OVER (order by sum(flex_value) desc) flex_rank
                     , max(super_flex_value) as super_flex_value
@@ -63,16 +80,28 @@ SELECT
                     , DENSE_RANK() OVER (order by total_value desc) total_rank
                     , fantasy_position
                     , case when player_position = 'QB' THEN sum(player_value) else 0 end as qb_value
+                    , case when player_position = 'QB' THEN sum(age) else 0 end as qb_age
                     , case when player_position = 'QB' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as qb_starter_value
+                    , case when player_position = 'QB' AND fantasy_designation = 'STARTER' THEN sum(age) else 0 end as qb_starter_age
+                    , case when player_position = 'QB' AND fantasy_designation = 'STARTER' THEN count(full_name) else 0 end as qb_starter_count
                     , case when player_position = 'QB' THEN count(full_name) else 0 end as qb_count
                     , case when player_position = 'RB' THEN sum(player_value) else 0 end as rb_value
+                    , case when player_position = 'RB' THEN sum(age) else 0 end as rb_age
                     , case when player_position = 'RB' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as rb_starter_value
+                    , case when player_position = 'RB' AND fantasy_designation = 'STARTER' THEN sum(age) else 0 end as rb_starter_age
+                    , case when player_position = 'RB' AND fantasy_designation = 'STARTER' THEN count(full_name) else 0 end as rb_starter_count
                     , case when player_position = 'RB' THEN count(full_name) else 0 end as rb_count
                     , case when player_position = 'WR' THEN sum(player_value) else 0 end as wr_value
+                    , case when player_position = 'WR' THEN sum(age) else 0 end as wr_age
                     , case when player_position = 'WR' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as wr_starter_value
+                    , case when player_position = 'WR' AND fantasy_designation = 'STARTER' THEN sum(age) else 0 end as wr_starter_age
+                    , case when player_position = 'WR' AND fantasy_designation = 'STARTER' THEN count(full_name) else 0 end as wr_starter_count
                     , case when player_position = 'WR' THEN count(full_name) else 0 end as wr_count
                     , case when player_position = 'TE' THEN sum(player_value) else 0 end as te_value
                     , case when player_position = 'TE' AND fantasy_designation = 'STARTER' THEN sum(player_value) else 0 end as te_starter_value
+                    , case when player_position = 'TE' THEN sum(age) else 0 end as te_age
+                    , case when player_position = 'TE' AND fantasy_designation = 'STARTER' THEN sum(age) else 0 end as te_starter_age
+                    , case when player_position = 'TE' AND fantasy_designation = 'STARTER' THEN count(full_name) else 0 end as te_starter_count
                     , case when player_position = 'TE' THEN count(full_name) else 0 end as te_count
                     , case when fantasy_position = 'FLEX' THEN sum(player_value) else 0 end as flex_value
                     , case when fantasy_position = 'SUPER_FLEX' THEN sum(player_value) else 0 end as super_flex_value
@@ -88,6 +117,7 @@ SELECT
                     , all_players.fantasy_position
                     , all_players.fantasy_designation
                     , all_players.team
+                    , all_players.age
                     , all_players.player_value
                     , sum(all_players.player_value) OVER (PARTITION BY all_players.user_id) as total_value  
                     from (WITH base_players as (SELECT
@@ -249,6 +279,7 @@ order by user_id, player_position desc)
 select tp.user_id
 ,m.display_name
 ,p.full_name
+,p.age
 ,p.team
 ,tp.player_full_name
 ,tp.player_id as sleeper_id

@@ -1,7 +1,15 @@
 import asyncpg
 import os
+import asyncio
+import logging
+from fastapi import HTTPException 
 
 pool = None
+pool_lock = asyncio.Lock()
+
+# Configure the logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger('my_logger')
 
 async def init_db_pool():
     global pool
@@ -15,15 +23,23 @@ async def init_db_pool():
         database=dbname,
         user=user,
         password=password,
-        ssl=sslmode
+        ssl=sslmode,
+        command_timeout=60
     )
 
 async def get_db():
     global pool
-    if pool is None:
-        await init_db_pool()
-    async with pool.acquire() as connection:
-        yield connection
+    try:
+        if pool is None:
+            async with pool_lock:
+                if pool is None:
+                    await init_db_pool()
+        async with pool.acquire() as connection:
+            yield connection
+    except Exception as e:
+        logger.error(f"Failed to acquire database connection: {e}")
+        raise HTTPException(status_code=500, detail="Database connection error")
+
 
 async def close_db():
     global pool

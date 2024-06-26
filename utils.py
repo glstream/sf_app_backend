@@ -240,7 +240,7 @@ async def insert_ranks_summary(db, ranks_data: RanksDataModel):
             {rank_source}_bench_rank, {rank_source}_picks_rank, updatetime
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (user_id, league_id) 
+        ON CONFLICT (user_id, league_id ) 
         DO UPDATE 
         SET 
             {rank_source}_power_rank = EXCLUDED.{rank_source}_power_rank,
@@ -773,7 +773,7 @@ async def player_manager_rosters(db, roster_data: RosterDataModel):
 
     try:
         # Perform cleaning operations
-        print("performing cleaninf operations")
+        print("performing roster cleaning operations")
         await clean_league_managers(db, league_id)
         await clean_league_rosters(db, session_id, league_id)
         await clean_league_picks(db, league_id, session_id)

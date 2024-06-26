@@ -36,10 +36,10 @@ SELECT
                     , NTILE(10) OVER (order by sum(wr_value) desc) wr_tile
                     , sum(wr_value) as wr_sum
                     , sum(wr_starter_value) as wr_starter_sum
-                    , coalesce(round(sum(rb_value) / NULLIF(sum(rb_count), 0),0), 0) as rb_average_value
-                    , coalesce(round(sum(rb_starter_value) / NULLIF(sum(rb_starter_count), 0),0), 0) as rb_starter_average_value
-                    , coalesce(round(sum(rb_age) / NULLIF(sum(rb_count), 0),0),0) as rb_average_age
-                    , coalesce(round(sum(rb_starter_age) / NULLIF(sum(rb_starter_count), 0),0),0) as rb_starter_average_age
+                    , coalesce(round(sum(wr_value) / NULLIF(sum(wr_count), 0),0), 0) as rb_average_value
+                    , coalesce(round(sum(wr_starter_value) / NULLIF(sum(wr_starter_count), 0),0), 0) as wr_starter_average_value
+                    , coalesce(round(sum(wr_age) / NULLIF(sum(wr_count), 0),0),0) as wr_average_age
+                    , coalesce(round(sum(wr_starter_age) / NULLIF(sum(wr_starter_count), 0),0),0) as wr_starter_average_age
                     , sum(wr_count) as wr_count
                     , max(te_value) as te_value
                     , max(te_starter_value) as te_starter_value
@@ -52,7 +52,7 @@ SELECT
                     , coalesce(round(sum(te_starter_value) / NULLIF(sum(te_starter_count), 0),0), 0) as te_starter_average_value
                     , coalesce(round(sum(te_age) / NULLIF(sum(te_count), 0),0),0) as te_average_age
                     , coalesce(round(sum(te_starter_age) / NULLIF(sum(te_starter_count), 0),0),0) as te_starter_average_age
-                    , sum(te_count) as wr_count
+                    , sum(te_count) as te_count
                     , max(picks_value) as picks_value
                     , RANK() OVER (order by sum(picks_value) desc) picks_rank
                     , NTILE(10) OVER (order by sum(picks_value) desc) picks_tile
